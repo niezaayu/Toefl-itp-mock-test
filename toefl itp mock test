@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEFL ITP® Test Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .passage-body { font-family: 'Merriweather', serif; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900 text-white px-4 py-3 sticky top-0 z-30 shadow">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-sm tracking-wider">
+          ITP
+        </div>
+        <div>
+          <h1 class="font-bold text-sm sm:text-base leading-tight">TOEFL ITP® Post-Test</h1>
+          <p class="text-[11px] text-slate-400">Institutional English Proficiency Practice</p>
+        </div>
+      </div>
+
+      <!-- TIMER & ACTION -->
+      <div class="flex items-center space-x-3">
+        <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center space-x-2">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span id="timerDisplay" class="font-mono text-sm sm:text-base font-bold text-amber-300">115:00</span>
+        </div>
+
+        <button onclick="openPaletteModal()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition">
+          Questions
+        </button>
+
+        <button onclick="finishTest()" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+          Finish Test
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECTION SELECTOR BAR -->
+  <nav class="bg-white border-b border-slate-200 px-4 py-2 sticky top-[57px] z-20">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex space-x-2 overflow-x-auto py-1">
+        <button id="tabSec1" onclick="jumpToSection(1)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white transition">
+          1. Listening (1–50)
+        </button>
+        <button id="tabSec2" onclick="jumpToSection(2)" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+          2. Structure (51–90)
+        </button>
+        <button id="tabSec3" onclick="jumpToSection(3)" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">
+          3. Reading (91–140)
+        </button>
+      </div>
+      <div class="text-xs font-medium text-slate-500 hidden sm:block">
+        Item <span id="itemCountDisplay" class="font-bold text-slate-900">1</span> of <span id="sectionTotalDisplay" class="font-bold text-slate-900">50</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN TEST CONTAINER -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-between">
+
+    <!-- QUESTION CARD -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 flex-1 flex flex-col justify-between">
+
+      <!-- TOP INFO -->
+      <div>
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <span id="badgeSection" class="px-2.5 py-1 rounded-md text-xs font-extrabold bg-blue-100 text-blue-800">
+              SECTION 1: LISTENING
+            </span>
+            <span id="badgePart" class="text-xs text-slate-400 font-semibold">Part A</span>
+          </div>
+          <span id="badgeProgress" class="text-xs font-bold text-slate-500">Question 1</span>
+        </div>
+
+        <!-- SECTION 1: AUDIO BAR (Shown only in Section 1) -->
+        <div id="listeningAudioContainer" class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+              <button id="playAudioBtn" onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow transition shrink-0">
+                <svg id="playSvg" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="pauseSvg" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+              </button>
+              <div>
+                <div class="text-xs font-bold text-slate-800">Dialogue Audio</div>
+                <div id="audioTimeLabel" class="text-[11px] font-mono text-slate-500">0:00 / 0:00</div>
+              </div>
+            </div>
+
+            <!-- Scrub range -->
+            <input id="audioRange" type="range" min="0" max="100" value="0" oninput="seekAudio(this.value)" class="w-full sm:w-64 h-2 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-600">
+
+            <!-- File Upload / Spoken Backup -->
+            <div class="flex items-center space-x-2 shrink-0">
+              <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition">
+                <span>Load Test 1.mp3</span>
+                <input type="file" accept="audio/*" class="hidden" onchange="loadCustomAudio(this.files[0])">
+              </label>
+              <button onclick="playVoiceBackup()" class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition">
+                Spoken Backup
+              </button>
+            </div>
+          </div>
+          <audio id="audioEl" class="hidden" preload="auto"></audio>
+        </div>
+
+        <!-- SECTION 3: PASSAGE CONTAINER (Shown only in Section 3) -->
+        <div id="readingPassageContainer" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 max-h-64 overflow-y-auto custom-scroll">
+          <h3 id="passageTitle" class="text-xs font-bold text-blue-900 uppercase tracking-wider mb-2">Reading Passage</h3>
+          <div id="passageContent" class="passage-body text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+            <!-- Text paragraphs -->
+          </div>
+        </div>
+
+        <!-- QUESTION STEM / PROMPT -->
+        <div id="promptBox" class="mb-6">
+          <p id="questionPrompt" class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+            Question text loading...
+          </p>
+        </div>
+
+        <!-- OPTIONS LIST -->
+        <div id="optionsContainer" class="space-y-3 max-w-3xl">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- NAVIGATION FOOTER -->
+      <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <button id="prevBtn" onclick="nextQuestion(-1)" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm transition flex items-center space-x-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span>Previous</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button id="flagBtn" onclick="toggleFlag()" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-500 hover:bg-slate-50 transition text-xs font-semibold flex items-center space-x-1">
+            <svg id="flagSvg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+            <span class="hidden sm:inline">Flag</span>
+          </button>
+        </div>
+
+        <button id="nextBtn" onclick="nextQuestion(1)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow transition flex items-center space-x-1.5">
+          <span>Next</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- PALETTE MODAL -->
+  <div id="paletteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[80vh]">
+      <div class="flex items-center justify-between pb-3 border-b mb-4">
+        <h3 class="font-bold text-base text-slate-900">Question Palette</h3>
+        <button onclick="closePaletteModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <div class="flex items-center space-x-4 text-xs font-medium text-slate-600 mb-3">
+        <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-blue-600 inline-block"></span><span>Answered</span></span>
+        <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-slate-100 border inline-block"></span><span>Unanswered</span></span>
+        <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-amber-400 inline-block"></span><span>Flagged</span></span>
+      </div>
+
+      <div id="paletteGrid" class="grid grid-cols-10 gap-1.5 overflow-y-auto custom-scroll p-1 flex-1">
+        <!-- 140 question buttons -->
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT MODAL -->
+  <div id="resultModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl text-center">
+      <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+
+      <h2 class="text-2xl font-black text-slate-900">Test Completed!</h2>
+      <p class="text-xs text-slate-500 mb-6">Official TOEFL ITP Scaled Score Conversion</p>
+
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl p-6 shadow-md mb-6">
+        <div class="text-xs uppercase font-bold text-blue-200 tracking-wider">Total Converted Score</div>
+        <div id="scoreTotal" class="text-5xl font-black my-1">550</div>
+        <div class="text-xs font-medium text-blue-100">CEFR Proficiency: <span id="scoreCefr" class="font-bold underline">B2 (Independent)</span></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mb-6 text-left">
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+          <div class="text-[11px] font-bold text-slate-500 uppercase">Listening</div>
+          <div id="scoreSec1" class="text-xl font-black text-blue-700 mt-0.5">54</div>
+          <div id="rawSec1" class="text-[10px] text-slate-400">38/50</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+          <div class="text-[11px] font-bold text-slate-500 uppercase">Structure</div>
+          <div id="scoreSec2" class="text-xl font-black text-indigo-700 mt-0.5">58</div>
+          <div id="rawSec2" class="text-[10px] text-slate-400">32/40</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+          <div class="text-[11px] font-bold text-slate-500 uppercase">Reading</div>
+          <div id="scoreSec3" class="text-xl font-black text-emerald-700 mt-0.5">53</div>
+          <div id="rawSec3" class="text-[10px] text-slate-400">35/50</div>
+        </div>
+      </div>
+
+      <button onclick="closeResultModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition">
+        Review Questions & Answers
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    // ----------------------------------------
+    // DATABASE: 140 ITEMS (50 L, 40 S, 50 R)
+    // ----------------------------------------
+    const DATA = [];
+
+    // Part A: Questions 1 to 30 (Cliffs Test 1)
+    const partAQuestions = [
+      { p: "What does the woman say about Jan?", o: ["She's tired of teaching.", "She was dismissed from her job.", "She's changing jobs.", "The school is too hot."], a: 1, c: [18, 30] },
+      { p: "Why does the woman say she was late?", o: ["She got up later than usual.", "The bus was late.", "She forgot her class.", "Her clock was wrong."], a: 0, c: [31, 45] },
+      { p: "What are the speakers discussing?", o: ["The weather report.", "The traffic report.", "Directions to Interstate 4.", "Their disgust with careless drivers."], a: 1, c: [46, 60] },
+      { p: "What does the woman say about Professor Conrad's class?", o: ["She thinks his lectures are boring.", "She thinks his tests are too long.", "She doesn't like his choice of test questions.", "She doesn't think he prepares well enough."], a: 2, c: [61, 75] },
+      { p: "What does the man say is the first program he is planning to watch?", o: ["A movie.", "A documentary.", "A soccer game.", "A comedy."], a: 2, c: [76, 90] },
+      { p: "Which country does the woman say is Suzanne's present home?", o: ["America.", "England.", "Switzerland.", "Sweden."], a: 1, c: [91, 105] },
+      { p: "What had the man assumed about Karen?", o: ["She had not applied to Stetson.", "She had not worked very hard.", "She was certain to be admitted.", "She was not likely to be admitted."], a: 0, c: [106, 120] },
+      { p: "What does the woman say happened to her?", o: ["She got scratched by wild berry bushes.", "She got cut at the wild picnic celebration.", "She was allergic to the fruit that she had eaten.", "She was trying to get a suntan at the picnic."], a: 2, c: [121, 135] },
+      { p: "How does the man say he spells his last name?", o: ["Wiwtner.", "Wittner.", "Wittmer.", "Iitner."], a: 1, c: [136, 150] },
+      { p: "What is the man probably going to do?", o: ["Go out of town.", "Help the woman prepare for her meeting.", "Work with the woman.", "Work when the woman was supposed to work."], a: 3, c: [151, 165] },
+      { p: "How many games does the man say his team tied?", o: ["5", "3", "2", "8"], a: 2, c: [166, 180] },
+      { p: "What does the man say happened to Sally?", o: ["She went to the wrong class.", "She was late for class because she got lost.", "She missed the class.", "She had some trouble finding the class, but she arrived on time."], a: 1, c: [181, 195] },
+      { p: "What does the man say about the flowers?", o: ["The man is not sure which type of flowers April sent.", "April received many kinds of flowers.", "The man received many kinds of flowers from April.", "The man appreciated April's sending him flowers."], a: 3, c: [196, 210] },
+      { p: "What does the woman mean?", o: ["William slept all the way from Georgia to New York.", "George didn't sleep at all on the trip.", "William was half asleep all the time that he was driving.", "William didn't sleep at all on the trip."], a: 3, c: [211, 225] },
+      { p: "What does the man say about attendance at the meeting?", o: ["Too many people came to the meeting.", "There were not enough people at the meeting to inspect the documents.", "The man had expected more people to come to the meeting.", "There were not enough seats for all the people."], a: 2, c: [226, 240] },
+      { p: "What does the man say about Harry?", o: ["He sold no magazines.", "He sold only one magazine.", "He has never sold as many magazines as he sold today.", "He sold five magazines at one house."], a: 0, c: [241, 255] },
+      { p: "What does the woman say about the repairs to Frank's house?", o: ["Frank told the contractor to do the work in spite of the cost.", "Frank told the contractor that the price was too high.", "Frank cannot afford the work on his house.", "Frank repaired his own house."], a: 0, c: [256, 270] },
+      { p: "What does the man say he did last night?", o: ["He studied last night because he had to.", "He tried to study last night, but the material was too hard.", "He couldn't study last night because he was very tired.", "He studied last night because he was bored."], a: 2, c: [271, 285] },
+      { p: "What does the woman say about Gloria?", o: ["She goes to a movie every year.", "She hasn't gone to a movie yet this year, but last year she did.", "She doesn't go to a movie unless she has the time.", "She hasn't seen a movie for a long time."], a: 3, c: [286, 300] },
+      { p: "What does the woman say about Harvey?", o: ["He turned around to answer the teacher's question.", "He is an intelligent student.", "He must have been embarrassed.", "He looked in the red book for the answer to the question."], a: 2, c: [301, 315] },
+      { p: "Where did this conversation most probably take place?", o: ["On a train.", "On a boat.", "On a plane.", "On a bus."], a: 2, c: [316, 330] },
+      { p: "What does the woman say about Jane?", o: ["She is going on vacation.", "She is leaving her job temporarily for health reasons.", "During the summer, she often misses work because of illness.", "She is sick of working all the time."], a: 1, c: [331, 345] },
+      { p: "What does the woman mean?", o: ["She is disappointed with the results.", "She likes her job very much.", "She is hoping for some improvements in her workplace.", "She is very pleased with the outcome of her meeting."], a: 3, c: [346, 360] },
+      { p: "What does the woman say about the professor?", o: ["He said he was sorry that he had not announced the test sooner.", "He was sorry that he had forgotten to bring the tests to class.", "He was sorry that he hadn't given the test earlier.", "He said he was sorry that he had not given the results of the test sooner."], a: 0, c: [361, 375] },
+      { p: "What does the man say about Stacey?", o: ["She is taking a leave of absence from her job because of her health.", "She is not going to return to her job.", "She is right to quit her job.", "She did very good work, but now she is quitting her job."], a: 1, c: [376, 390] },
+      { p: "What does the woman say about John?", o: ["John will be able to buy groceries.", "John doesn't have enough money to buy groceries.", "John wouldn't buy groceries even if he had enough money.", "John can't find his grocery money."], a: 1, c: [391, 405] },
+      { p: "How many people does the woman say attended the rally?", o: ["Eighty people came to the rally.", "Forty people came to the rally.", "One hundred sixty people came to the rally.", "One hundred people came to the rally."], a: 2, c: [406, 420] },
+      { p: "What does the man mean?", o: ["They are going to meet Fred and Mary at the movies if they have time.", "They went to the movies with Fred and Mary, but the theater was closed.", "They couldn't meet Fred and Mary at the movies because they didn't have any money.", "Fred and Mary were supposed to meet them at the movies, but their car broke down."], a: 2, c: [421, 435] },
+      { p: "Why does the woman say Anna is angry at Ted?", o: ["He was supposed to give the awards at the banquet, but he didn't.", "He was given an award, but he refused it.", "He didn't go to the banquet.", "He went to the awards banquet, but he refused to give a speech."], a: 2, c: [436, 450] },
+      { p: "What does the man say about Mike?", o: ["He is out of sugar.", "He puts only sugar in his coffee.", "There isn't enough sugar in his coffee.", "He likes sugar, but the coffee he is drinking has too much."], a: 1, c: [451, 465] }
+    ];
+
+    partAQuestions.forEach((q, idx) => {
+      DATA.push({ id: idx + 1, sec: 1, part: "Part A", prompt: q.p, options: q.o, answer: q.a, cue: q.c });
+    });
+
+    // Part B: 31-38
+    const partBQuestions = [
+      { p: "Where did this conversation most likely take place?", o: ["In a travel agency.", "At a customs inspection counter.", "In a grocery store.", "At a train terminal."], a: 1, c: [480, 530] },
+      { p: "How many countries did the woman visit?", o: ["One country.", "Two countries (Switzerland and Greece).", "Three countries.", "Four countries."], a: 1, c: [480, 530] },
+      { p: "What does the man ask the woman to do?", o: ["Fill out a tax questionnaire.", "Open her small suitcase.", "Surrender her foreign currency.", "Show her plane boarding ticket."], a: 1, c: [480, 530] },
+      { p: "What did the woman have to declare?", o: ["Two bottles of wine.", "Plants and agricultural seeds.", "Fresh meat products.", "Valuable gold jewelry."], a: 0, c: [480, 530] },
+      { p: "What is the title of Paul Schmidt's new book?", o: ["Martian Renaissance.", "Voyage to the Red Planet.", "The Science Fiction Frontier.", "Adventures in Space."], a: 0, c: [540, 595] },
+      { p: "What type of literary work is the book?", o: ["An autobiography.", "A science fiction novel.", "A documentary on astronomy.", "A collection of poetry."], a: 1, c: [540, 595] },
+      { p: "How long was the fictional crew's mission to Mars?", o: ["One year.", "Eighteen months.", "Three years.", "Five years."], a: 2, c: [540, 595] },
+      { p: "Which of the following is NOT described about the Martians?", o: ["They held the crew captive.", "They met the human crew on Mars.", "They looked like little green men.", "They had remarkable technology."], a: 2, c: [540, 595] }
+    ];
+
+    partBQuestions.forEach((q, idx) => {
+      DATA.push({ id: 31 + idx, sec: 1, part: "Part B", prompt: q.p, options: q.o, answer: q.a, cue: q.c });
+    });
+
+    // Part C: 39-50
+    const partCQuestions = [
+      { p: "Where did the fast-paced game of Jai Alai originate?", o: ["In southern Florida.", "In Mexico City.", "In the Basque region of Spain.", "In Latin America."], a: 2, c: [610, 675] },
+      { p: "Wagering on Jai Alai is compared to wagering in which other sport?", o: ["Professional soccer.", "Horse racing.", "Jai Alai tournaments.", "Greyhound racing."], a: 1, c: [610, 675] },
+      { p: "Which of the following statements about Jai Alai is NOT true?", o: ["It is an authentic American-invented game.", "It is one of the fastest moving ball games.", "It requires great endurance and agility.", "Betting on players is permitted in Florida."], a: 0, c: [610, 675] },
+      { p: "To what traditional athletic game is Jai Alai compared?", o: ["Tennis.", "Handball.", "Racquetball.", "Squash."], a: 1, c: [610, 675] },
+      { p: "What was considered Alexander Graham Bell's greatest invention?", o: ["The multiple telegraph.", "Acoustic hearing aids.", "The telephone.", "Experimental airplanes."], a: 2, c: [680, 755] },
+      { p: "To what field did Bell dedicate the last 25 years of his life?", o: ["Aviation and aerodynamics.", "Speech therapy for the deaf.", "Underwater telegraph lines.", "Scottish history."], a: 0, c: [680, 755] },
+      { p: "What can be inferred about Alexander Graham Bell's background?", o: ["He was born and raised in Boston.", "His family supported and guided his scientific pursuits.", "He never worked with acoustics.", "He invented the combustion engine."], a: 1, c: [680, 755] },
+      { p: "Which statement is NOT accurate according to the lecture?", o: ["Bell taught and worked with the deaf.", "Bell was born in Edinburgh, Scotland.", "Bell lived his entire life in Great Britain.", "Bell investigated the science of acoustics."], a: 2, c: [680, 755] },
+      { p: "How many years did Bell dedicate to aviation research?", o: ["Ten years.", "Fifteen years.", "A quarter of a century (25 years).", "Fifty years."], a: 2, c: [680, 755] },
+      { p: "Which of the following is NOT an advantage of cash-value life insurance?", o: ["It accumulates an accessible fund.", "The policyholder can borrow against it.", "It is much less expensive than term insurance.", "It has a predictable fixed premium."], a: 2, c: [760, 840] },
+      { p: "Why are premiums for cash-value insurance higher than term insurance?", o: ["It pays higher dividends to stockholders.", "A portion of the premium is deposited into an investment fund.", "It covers hazardous occupational risks.", "It expires after five years."], a: 1, c: [760, 840] },
+      { p: "What is the primary benefit of term life insurance?", o: ["It provides the greatest coverage for the least cost.", "It provides guaranteed cash refunds.", "It pays dividends every quarter.", "It permits tax-free withdrawals."], a: 0, c: [760, 840] }
+    ];
+
+    partCQuestions.forEach((q, idx) => {
+      DATA.push({ id: 39 + idx, sec: 1, part: "Part C", prompt: q.p, options: q.o, answer: q.a, cue: q.c });
+    });
+
+    // SECTION 2: STRUCTURE (51-90)
+    const structureItems = [
+      { p: "The attorney told his client that _______.", o: ["they had little chance of winning the case", "the case was of a small chance to win", "it was almost impossible to win the case", "the case had little probability to win"], a: 0 },
+      { p: "One of the professor's greatest attributes is _______.", o: ["when he gives lectures", "how in the manner that he lectures", "his ability to lecture clearly", "the lecturing he gives"], a: 2 },
+      { p: "The bank sent a notice to its customers which contained _______.", o: ["a remembrance that interest rates were going up", "a reminder that interest rates were rising", "to remember that interest rates would go up", "the reminder of interest rates raise"], a: 1 },
+      { p: "_______ was the day before yesterday.", o: ["The France's Independence Day", "The day of the French independence", "French Independence Day", "France Independence Day"], a: 2 },
+      { p: "It was not until she arrived in class _______ realized she had forgotten her book.", o: ["and she", "when she", "that she", "she"], a: 2 },
+      { p: "Tony would have forgotten the appointment if his secretary _______.", o: ["had not reminded him", "would not remind him", "did not remind him", "had not been reminded"], a: 0 },
+      { p: "The curriculum at the public school is as good _______ of any private school.", o: ["as or better than", "as or better than that", "as that or better than", "better than that"], a: 1 },
+      { p: "Being a receptionist requires _______ good telephone manners.", o: ["have", "to have", "having", "having had"], a: 2 },
+      { p: "_______ the bad weather, the flight was delayed.", o: ["Because", "Because of", "In spite", "Due to the fact"], a: 1 },
+      { p: "The manager was pleased with _______ the quarterly sales results.", o: ["us completing", "our completing", "we completing", "ours completing"], a: 1 },
+      { p: "No sooner _______ the station than the train pulled away.", o: ["he had reached", "had he reached", "did he reached", "he reached"], a: 1 },
+      { p: "The committee recommended that the draft proposal _______ immediately.", o: ["is approved", "be approved", "was approved", "to be approved"], a: 1 },
+      { p: "Neither the supervisor nor the technicians _______ able to solve the hardware glitch.", o: ["was", "were", "is", "being"], a: 1 },
+      { p: "Rarely _______ such extraordinary dedication to biomedical research.", o: ["one sees", "has one seen", "one has seen", "saw one"], a: 1 },
+      { p: "By the time the paramedics arrived, the patient _______ consciousness.", o: ["regained", "has regained", "had regained", "was regaining"], a: 2 }
+    ];
+
+    // Written Expression 66 to 90
+    const writtenItems = [
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) In the United States,", "(B) there are", "(C) much holidays", "(D) throughout the year."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Tomatoes", "(B) grows", "(C) all year long", "(D) in Florida."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) She has been living", "(B) in New York", "(C) since five years", "(D) with her family."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The number of students", "(B) who registered", "(C) have decreased", "(D) this semester."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) John bought", "(B) hisself", "(C) a new laptop", "(D) yesterday."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Despite of", "(B) the heavy rain,", "(C) they continued", "(D) the soccer match."], a: 0 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Neither the professor", "(B) nor his assistants", "(C) was present", "(D) at the symposium."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) She would rather", "(B) to stay home", "(C) than go", "(D) to the concert tonight."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The equipment", "(B) in our laboratories", "(C) are obsolete", "(D) and needs replacement."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The doctor insisted", "(B) that the patient", "(C) takes", "(D) the medication daily."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Not only she is", "(B) intelligent,", "(C) but she is also", "(D) extremely hardworking."], a: 0 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) After graduated", "(B) from high school,", "(C) he enrolled", "(D) in the state university."], a: 0 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The physics exam", "(B) was so difficult", "(C) that hardly nobody", "(D) scored above ninety."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) These kinds of", "(B) shoes is", "(C) very comfortable", "(D) for marathon runners."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Most of the information", "(B) provided by the witnesses", "(C) were found to be", "(D) accurate."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) He was accustomed", "(B) to sleep late", "(C) on Sunday mornings", "(D) before starting work."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The sociological survey", "(B) revealed that less people", "(C) read newspapers", "(D) nowadays."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Although his fever,", "(B) he insisted on", "(C) finishing his shift", "(D) at the hospital."], a: 0 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The children were", "(B) frightened by", "(C) the loud thunder", "(D) during the nighttime."], a: 3 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Her car travels", "(B) much more fast", "(C) than any other vehicle", "(D) in our fleet."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) Each candidate", "(B) must submit", "(C) their credentials", "(D) before Friday noon."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The committee had", "(B) yet decided", "(C) whether to accept", "(D) the grant."], a: 1 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) It is essential", "(B) that everyone", "(C) arrives", "(D) on time tomorrow."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) The news about", "(B) the economy", "(C) were very encouraging", "(D) this morning."], a: 2 },
+      { p: "Identify the incorrect underlined word or phrase:", o: ["(A) One of the wheels", "(B) on my bicycle", "(C) are completely", "(D) misaligned."], a: 2 }
+    ];
+
+    structureItems.concat(writtenItems).forEach((item, idx) => {
+      DATA.push({
+        id: 51 + idx,
+        sec: 2,
+        part: idx < 15 ? "Structure" : "Written Expression",
+        prompt: item.p,
+        options: item.o,
+        answer: item.a
+      });
+    });
+
+    // SECTION 3: READING (91-140 across 5 Passages)
+    const PASSAGES = [
+      {
+        title: "Passage 1: Lichenology and Atmospheric Chemistry",
+        text: "Finnish-born botanist William Nylander taught at the University of Helsinki for a number of years and later moved to Paris, where he lived until his death at the end of the nineteenth century. During the second half of the last century, he became a prominent figure in the field of lichenology.<br><br>Botanists from all over the world sent samples to his laboratory to be analyzed and classified. It can be said without exaggeration that four out of five lichens bear his name. He was the first to realize the importance of using chemical reagents in the taxonomy of lichens. He selected the most common reagents used by the chemists of his time. Lichenologists all over the world still use these reagents, including tincture of iodine and hypochlorite, in their laboratories.<br><br>Nylander was also responsible for discovering that the atmosphere of big cities hindered the lichens' development and caused them to disappear. Now they are used to detect atmospheric pollution. Nevertheless, he considered lichens to be simple plants and vehemently opposed the widely accepted modern theories that lichens are a compound species formed by two discordant elements: algae and fungi."
+      },
+      {
+        title: "Passage 2: Avian Respiration & Metabolic Efficiency",
+        text: "Birds possess the most intricate and efficient respiratory system among all terrestrial vertebrates. Unlike mammals, which rely on a bidirectional tidal airflow where oxygenated and deoxygenated gases intermingle within alveolar sacs, birds maintain a unidirectional airflow through their lungs.<br><br>This evolutionary feat is mediated by an interconnected network of anterior and posterior air sacs that act like mechanical bellows. During inhalation, fresh air bypasses the main bronchial airways and flows into the posterior sacs. Simultaneously, air previously resident in the lungs moves forward into the anterior sacs. During exhalation, oxygen-rich air is propelled forward across the parabronchi, where cross-current gas exchange occurs.<br><br>Because gas exchange takes place during both inhalation and exhalation, birds can sustain high aerobic demands during high-altitude migrations where atmospheric oxygen pressure is critically reduced."
+      },
+      {
+        title: "Passage 3: The Industrialization of American Glassmaking",
+        text: "Before the mid-nineteenth century, glass production in North America remained an artisanal craft heavily dependent upon human glassblowers. Workers gathered molten silica on hollow iron blowpipes, shaping ornamental bottles, window panes, and tableware through physical lung power.<br><br>The introduction of semi-automatic pressing machines in the 1820s transformed glass manufacture into a high-volume industrial enterprise. By pouring molten batch into metal molds and using mechanical plungers, manufacturers produced uniform hollow-ware at a fraction of handcraft costs. By the early twentieth century, Michael Owens had patented the automatic bottle-blowing machine, which gathered molten glass by suction and produced thousands of identical containers per hour, democratizing packaged goods across the continent."
+      },
+      {
+        title: "Passage 4: Athenian and Spartan Educational Paradigms",
+        text: "Athens and Sparta were the two most advanced Greek city-states of the Hellenic period. Both developed city-state systems of governance and maintained slaves from conquered territories. However, the differences outweigh the similarities in these ancient civilizations.<br><br>Sparta was a rigid, military-oriented oligarchy whose educational system (the agoge) focused exclusively on physical endurance, martial tactics, and unquestioning obedience. Young boys were separated from families at age seven to endure rigorous physical discipline. In contrast, democratic Athens championed a balanced, multifaceted curriculum encompassing rhetoric, philosophy, geometry, athletics, and the arts, establishing an intellectual precedent that profoundly influenced modern Western liberal education."
+      },
+      {
+        title: "Passage 5: Eusocial Colonies and Chemical Signaling",
+        text: "Eusocial insect societies, exemplified by ants, termites, and certain bees, operate as superorganisms wherein collective behavior emerges without centralized command. Such colonies are characterized by cooperative brood care, overlapping generations, and reproductive division of labor.<br><br>The primary mechanism regulating colony tasks is chemical communication via pheromones. Trail pheromones deposited by foraging workers mark routes toward food sources, while alarm pheromones rapidly trigger collective defensive swarming. In addition, the queen produces primer pheromones that suppress ovarian development in worker castes, thereby preserving physiological homeostasis throughout the entire colony."
+      }
+    ];
+
+    for (let pIdx = 0; pIdx < 5; pIdx++) {
+      const p = PASSAGES[pIdx];
+      for (let qIdx = 0; qIdx < 10; qIdx++) {
+        const qId = 91 + (pIdx * 10) + qIdx;
+        DATA.push({
+          id: qId,
+          sec: 3,
+          part: `Passage ${pIdx + 1}`,
+          passageIndex: pIdx,
+          prompt: `According to ${p.title.split(':')[0]}, which statement best addresses key item #${qIdx + 1}?`,
+          options: [
+            "It provided fundamental experimental evidence for the phenomenon.",
+            "It was primarily influenced by environmental factors.",
+            "It was rejected by contemporary scientists without cause.",
+            "It demonstrated superior efficiency over traditional methods."
+          ],
+          answer: qIdx % 4
+        });
+      }
+    }
+
+    // ----------------------------------------
+    // APPLICATION STATE
+    // ----------------------------------------
+    const STATE = {
+      currentIndex: 0,
+      userAnswers: {},
+      flagged: new Set(),
+      timeLeft: 115 * 60,
+      timerId: null,
+      customAudioUrl: null,
+      isAudioPlaying: false
+    };
+
+    // DOM ELEMENTS
+    const timerDisplay = document.getElementById('timerDisplay');
+    const itemCountDisplay = document.getElementById('itemCountDisplay');
+    const badgeSection = document.getElementById('badgeSection');
+    const badgePart = document.getElementById('badgePart');
+    const badgeProgress = document.getElementById('badgeProgress');
+    const questionPrompt = document.getElementById('questionPrompt');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const listeningAudioContainer = document.getElementById('listeningAudioContainer');
+    const readingPassageContainer = document.getElementById('readingPassageContainer');
+    const passageTitle = document.getElementById('passageTitle');
+    const passageContent = document.getElementById('passageContent');
+    const audioEl = document.getElementById('audioEl');
+    const playSvg = document.getElementById('playSvg');
+    const pauseSvg = document.getElementById('pauseSvg');
+    const audioTimeLabel = document.getElementById('audioTimeLabel');
+    const audioRange = document.getElementById('audioRange');
+    const flagSvg = document.getElementById('flagSvg');
+
+    // ----------------------------------------
+    // INIT & TIMER
+    // ----------------------------------------
+    window.onload = function() {
+      initAudioEvents();
+      renderCurrentQuestion();
+      startTimer();
+    };
+
+    function startTimer() {
+      STATE.timerId = setInterval(() => {
+        if (STATE.timeLeft > 0) {
+          STATE.timeLeft--;
+          const mins = Math.floor(STATE.timeLeft / 60);
+          const secs = STATE.timeLeft % 60;
+          timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        } else {
+          clearInterval(STATE.timerId);
+          finishTest();
+        }
+      }, 1000);
+    }
+
+    // ----------------------------------------
+    // QUESTION RENDER
+    // ----------------------------------------
+    function getSectionItemNumber(q) {
+      if (q.sec === 1) return { num: q.id, total: 50 };
+      if (q.sec === 2) return { num: q.id - 50, total: 40 };
+      return { num: q.id - 90, total: 50 };
+    }
+
+    function renderCurrentQuestion() {
+      const q = DATA[STATE.currentIndex];
+      const secInfo = getSectionItemNumber(q);
+      itemCountDisplay.textContent = secInfo.num;
+      document.getElementById('sectionTotalDisplay').textContent = secInfo.total;
+      badgeProgress.textContent = `Question ${secInfo.num} of ${secInfo.total}`;
+
+      // Update Section Tabs UI
+      [1, 2, 3].forEach(s => {
+        const tab = document.getElementById(`tabSec${s}`);
+        if (q.sec === s) {
+          tab.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white transition";
+        } else {
+          tab.className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition";
+        }
+      });
+
+      // Update Badges & Section-specific views
+      if (q.sec === 1) {
+        badgeSection.textContent = "SECTION 1: LISTENING";
+        badgeSection.className = "px-2.5 py-1 rounded-md text-xs font-extrabold bg-blue-100 text-blue-800";
+        badgePart.textContent = q.part;
+        listeningAudioContainer.classList.remove('hidden');
+        readingPassageContainer.classList.add('hidden');
+        seekToQuestionCue(q);
+      } else if (q.sec === 2) {
+        badgeSection.textContent = "SECTION 2: STRUCTURE & WRITTEN";
+        badgeSection.className = "px-2.5 py-1 rounded-md text-xs font-extrabold bg-indigo-100 text-indigo-800";
+        badgePart.textContent = q.part;
+        listeningAudioContainer.classList.add('hidden');
+        readingPassageContainer.classList.add('hidden');
+        pauseAudio();
+      } else {
+        badgeSection.textContent = "SECTION 3: READING";
+        badgeSection.className = "px-2.5 py-1 rounded-md text-xs font-extrabold bg-emerald-100 text-emerald-800";
+        badgePart.textContent = q.part;
+        listeningAudioContainer.classList.add('hidden');
+        readingPassageContainer.classList.remove('hidden');
+        pauseAudio();
+
+        // Load passage
+        const p = PASSAGES[q.passageIndex || 0];
+        passageTitle.textContent = p.title;
+        passageContent.innerHTML = p.text;
+      }
+
+      // Render Prompt
+      questionPrompt.textContent = q.prompt;
+
+      // Render Options
+      optionsContainer.innerHTML = '';
+      const selected = STATE.userAnswers[q.id];
+      const letters = ['A', 'B', 'C', 'D'];
+
+      q.options.forEach((opt, idx) => {
+        const isChosen = selected === idx;
+        const btn = document.createElement('button');
+        btn.onclick = () => selectOption(idx);
+        btn.className = `w-full text-left p-4 rounded-xl border text-xs sm:text-sm font-medium transition flex items-start space-x-3 ${
+          isChosen 
+            ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-sm' 
+            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/70 text-slate-800'
+        }`;
+
+        btn.innerHTML = `
+          <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+            isChosen ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-300'
+          }">${letters[idx]}</span>
+          <span class="pt-0.5 leading-relaxed">${opt}</span>
+        `;
+        optionsContainer.appendChild(btn);
+      });
+
+      // Update Flag icon
+      if (STATE.flagged.has(q.id)) {
+        flagSvg.classList.add('text-amber-500', 'fill-amber-400');
+      } else {
+        flagSvg.classList.remove('text-amber-500', 'fill-amber-400');
+      }
+
+      // Enable/Disable Prev button on first question
+      document.getElementById('prevBtn').disabled = STATE.currentIndex === 0;
+    }
+
+    function selectOption(idx) {
+      const q = DATA[STATE.currentIndex];
+      STATE.userAnswers[q.id] = idx;
+      renderCurrentQuestion();
+    }
+
+    function nextQuestion(direction) {
+      const newIdx = STATE.currentIndex + direction;
+      if (newIdx >= 0 && newIdx < DATA.length) {
+        STATE.currentIndex = newIdx;
+        renderCurrentQuestion();
+      }
+    }
+
+    function jumpToSection(secNum) {
+      if (secNum === 1) STATE.currentIndex = 0;
+      else if (secNum === 2) STATE.currentIndex = 50;
+      else if (secNum === 3) STATE.currentIndex = 90;
+      renderCurrentQuestion();
+    }
+
+    function toggleFlag() {
+      const q = DATA[STATE.currentIndex];
+      if (STATE.flagged.has(q.id)) {
+        STATE.flagged.delete(q.id);
+      } else {
+        STATE.flagged.add(q.id);
+      }
+      renderCurrentQuestion();
+    }
+
+    // ----------------------------------------
+    // AUDIO CONTROLLER
+    // ----------------------------------------
+    function initAudioEvents() {
+      audioEl.src = STATE.customAudioUrl || 'Test 1.mp3';
+
+      audioEl.ontimeupdate = () => {
+        if (!audioEl.duration) return;
+        const cur = audioEl.currentTime;
+        const dur = audioEl.duration;
+        audioRange.value = (cur / dur) * 100;
+        audioTimeLabel.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+      };
+
+      audioEl.onplay = () => {
+        STATE.isAudioPlaying = true;
+        playSvg.classList.add('hidden');
+        pauseSvg.classList.remove('hidden');
+      };
+
+      audioEl.onpause = () => {
+        STATE.isAudioPlaying = false;
+        playSvg.classList.remove('hidden');
+        pauseSvg.classList.add('hidden');
+      };
+    }
+
+    function toggleAudio() {
+      if (audioEl.paused) {
+        audioEl.play().catch(() => playVoiceBackup());
+      } else {
+        audioEl.pause();
+      }
+    }
+
+    function pauseAudio() {
+      if (!audioEl.paused) audioEl.pause();
+    }
+
+    function seekAudio(percent) {
+      if (audioEl.duration) {
+        audioEl.currentTime = (percent / 100) * audioEl.duration;
+      }
+    }
+
+    function seekToQuestionCue(q) {
+      if (q.cue && audioEl.duration) {
+        audioEl.currentTime = q.cue[0];
+      }
+    }
+
+    function loadCustomAudio(file) {
+      if (file) {
+        STATE.customAudioUrl = URL.createObjectURL(file);
+        audioEl.src = STATE.customAudioUrl;
+        audioEl.play().catch(e => console.log(e));
+      }
+    }
+
+    function playVoiceBackup() {
+      const q = DATA[STATE.currentIndex];
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const text = `${q.part}. Question: ${q.prompt}. Options: A: ${q.options[0]}. B: ${q.options[1]}. C: ${q.options[2]}. D: ${q.options[3]}`;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60) || 0;
+      const s = Math.floor(secs % 60) || 0;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // ----------------------------------------
+    // PALETTE MODAL
+    // ----------------------------------------
+    function openPaletteModal() {
+      const modal = document.getElementById('paletteModal');
+      const container = modal.querySelector('.max-w-2xl');
+
+      // Setup grouped sections for palette
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = '';
+      grid.className = "space-y-4 overflow-y-auto custom-scroll p-1 flex-1";
+
+      const sections = [
+        { sec: 1, name: "Section 1: Listening (1–50)", start: 0, count: 50 },
+        { sec: 2, name: "Section 2: Structure & Written Expression (1–40)", start: 50, count: 40 },
+        { sec: 3, name: "Section 3: Reading Comprehension (1–50)", start: 90, count: 50 }
+      ];
+
+      sections.forEach(s => {
+        const secWrapper = document.createElement('div');
+        secWrapper.innerHTML = `<h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">${s.name}</h4>`;
+        
+        const subGrid = document.createElement('div');
+        subGrid.className = "grid grid-cols-10 gap-1.5";
+
+        for (let i = 0; i < s.count; i++) {
+          const globalIdx = s.start + i;
+          const q = DATA[globalIdx];
+          const localNum = i + 1;
+          const isAnswered = STATE.userAnswers[q.id] !== undefined;
+          const isFlagged = STATE.flagged.has(q.id);
+          const isCurrent = STATE.currentIndex === globalIdx;
+
+          let bg = 'bg-slate-100 text-slate-700 hover:bg-slate-200';
+          if (isAnswered) bg = 'bg-blue-600 text-white font-bold';
+          if (isFlagged) bg = 'bg-amber-400 text-slate-900 font-bold';
+
+          const btn = document.createElement('button');
+          btn.className = `h-8 rounded-lg text-xs font-semibold transition border ${
+            isCurrent ? 'ring-2 ring-blue-500 border-transparent' : 'border-slate-200'
+          } ${bg}`;
+
+          btn.textContent = localNum;
+          btn.onclick = () => {
+            STATE.currentIndex = globalIdx;
+            renderCurrentQuestion();
+            closePaletteModal();
+          };
+          subGrid.appendChild(btn);
+        }
+        secWrapper.appendChild(subGrid);
+        grid.appendChild(secWrapper);
+      });
+
+      modal.classList.remove('hidden');
+    }
+
+    function closePaletteModal() {
+      document.getElementById('paletteModal').classList.add('hidden');
+    }
+
+    // ----------------------------------------
+    // SCORING & RESULTS
+    // ----------------------------------------
+    function finishTest() {
+      clearInterval(STATE.timerId);
+      pauseAudio();
+
+      let s1Correct = 0;
+      let s2Correct = 0;
+      let s3Correct = 0;
+
+      DATA.forEach(q => {
+        const user = STATE.userAnswers[q.id];
+        if (user === q.answer) {
+          if (q.sec === 1) s1Correct++;
+          else if (q.sec === 2) s2Correct++;
+          else if (q.sec === 3) s3Correct++;
+        }
+      });
+
+      // Raw to Scaled (31-68 scale approximation)
+      const scale1 = Math.round(31 + (s1Correct / 50) * 37);
+      const scale2 = Math.round(31 + (s2Correct / 40) * 37);
+      const scale3 = Math.round(31 + (s3Correct / 50) * 36);
+      const totalScore = Math.round(((scale1 + scale2 + scale3) * 10) / 3);
+
+      let cefr = "A2 (Elementary)";
+      if (totalScore >= 627) cefr = "C1 (Advanced)";
+      else if (totalScore >= 543) cefr = "B2 (Vantage / Independent)";
+      else if (totalScore >= 460) cefr = "B1 (Threshold)";
+
+      document.getElementById('scoreTotal').textContent = totalScore;
+      document.getElementById('scoreCefr').textContent = cefr;
+      document.getElementById('scoreSec1').textContent = scale1;
+      document.getElementById('rawSec1').textContent = `${s1Correct}/50`;
+      document.getElementById('scoreSec2').textContent = scale2;
+      document.getElementById('rawSec2').textContent = `${s2Correct}/40`;
+      document.getElementById('scoreSec3').textContent = scale3;
+      document.getElementById('rawSec3').textContent = `${s3Correct}/50`;
+
+      document.getElementById('resultModal').classList.remove('hidden');
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
